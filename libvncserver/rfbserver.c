@@ -317,6 +317,9 @@ rfbNewTCPOrUDPClient(rfbScreenInfoPtr rfbScreen,
     if (!cl)
         return NULL;
 
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+    cl->rfbSendRectEncodingH265 = &rfbInitializeH265;
+#endif
     cl->screen = rfbScreen;
     cl->sock = sock;
     cl->viewOnly = FALSE;
@@ -602,6 +605,10 @@ rfbClientConnectionGone(rfbClientPtr cl)
 	    deflateEnd(&cl->zsStruct[i]);
     }
 #endif
+#endif
+
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+    rfbCleanH265(cl);
 #endif
 
     if (cl->screen->pointerClient == cl)
@@ -1036,6 +1043,9 @@ rfbSendSupportedEncodings(rfbClientPtr cl)
 	rfbEncodingSupportedMessages,
 	rfbEncodingSupportedEncodings,
 	rfbEncodingServerIdentity,
+#ifdef LIBVNCSERVER_HAVE_FFMPEG
+    rfbEncodingsH265
+#endif
     };
     uint32_t nEncodings = sizeof(supported) / sizeof(supported[0]), i;
 
@@ -2171,11 +2181,31 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
 	    case rfbEncodingTightPng:
 #endif
             /* The first supported encoding is the 'preferred' encoding */
-                if (cl->preferredEncoding == -1)
-                    cl->preferredEncoding = enc;
+            if (cl->preferredEncoding == -1)
+                cl->preferredEncoding = enc;
 
+            break;
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+        case rfbEncodingH265:
+            if (cl->screen->serverFormat.bitsPerPixel != 24 &&
+                cl->screen->serverFormat.bitsPerPixel != 32) {
 
+                rfbLog("Server uses %d bits per pixel, HEVC requries server to use 24 or 32 bits per pixel.\n", cl->screen->serverFormat.bitsPerPixel);
                 break;
+            }
+
+            if (cl->screen->serverFormat.trueColour == 0) {
+                rfbLog("Server uses colour map therefore HEVC is unavailable.\n");
+                break;
+            }
+
+            if (cl->preferredEncoding == -1) {
+                cl->preferredEncoding = enc;
+            }
+
+            break;
+#endif
+
 	    case rfbEncodingXCursor:
 		if(!cl->screen->dontConvertRichCursorToXCursor) {
 		    rfbLog("Enabling X-style cursor updates for client %s\n",
@@ -3276,6 +3306,12 @@ rfbSendFramebufferUpdate(rfbClientPtr cl,
 	        goto updateFailed;
 	    break;
 #endif
+#endif
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+    case rfbEncodingH265:
+        if (!cl->rfbSendRectEncodingH265(cl, x, y, w, h))
+	        goto updateFailed;
+        break;
 #endif
         }
     }

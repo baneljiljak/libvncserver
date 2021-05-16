@@ -52,7 +52,7 @@ option(WITH_GNUTLS "Search for the GnuTLS secure communications library to suppo
 option(WITH_OPENSSL "Search for the OpenSSL cryptography library to support TLS and use as crypto backend" ON)
 option(WITH_SYSTEMD "Search for libsystemd to build with systemd socket activation support" ON)
 option(WITH_GCRYPT "Search for Libgcrypt to use as crypto backend" ON)
-option(WITH_FFMPEG "Search for FFMPEG to build an example VNC to MPEG encoder" ON)
+option(WITH_FFMPEG "Search for FFMPEG to suport h265 encoding and build an example VNC to MPEG encoder" ON)
 option(WITH_TIGHTVNC_FILETRANSFER "Enable filetransfer if there is pthreads support" ON)
 option(WITH_24BPP "Allow 24 bpp" ON)
 option(WITH_IPv6 "Enable IPv6 Support" ON)
@@ -466,6 +466,19 @@ set(LIBVNCSERVER_SOURCES
     ${TIGHT_C}
 )
 
+if(FFMPEG_FOUND)
+  add_definitions(-DLIBVNCSERVER_HAVE_LIBFFMPEG)
+  set(LIBVNCSERVER_SOURCES
+    ${LIBVNCSERVER_SOURCES}
+    ${LIBVNCSERVER_DIR}/h265.c
+  )
+  set(LIBVNCCLIENT_SOURCES
+    ${LIBVNCCLIENT_SOURCES}
+    ${LIBVNCCLIENT_DIR}/h265.c
+  )
+
+endif(FFMPEG_FOUND)
+
 if(WITH_THREADS AND WITH_TIGHTVNC_FILETRANSFER AND CMAKE_USE_PTHREADS_INIT)
   set(LIBVNCSERVER_SOURCES
     ${LIBVNCSERVER_SOURCES}
@@ -500,19 +513,21 @@ target_link_libraries(vncclient
                       ${ZLIB_LIBRARIES}
                       ${LZO_LIBRARIES}
                       ${JPEG_LIBRARIES}
-		      ${CRYPTO_LIBRARIES}
+		              ${CRYPTO_LIBRARIES}
                       ${GNUTLS_LIBRARIES}
                       ${OPENSSL_LIBRARIES}
+                      ${FFMPEG_LIBRARIES}
 )
 target_link_libraries(vncserver
                       ${ADDITIONAL_LIBS}
                       ${ZLIB_LIBRARIES}
                       ${LZO_LIBRARIES}
                       ${JPEG_LIBRARIES}
-		      ${PNG_LIBRARIES}
-		      ${CRYPTO_LIBRARIES}
+		              ${PNG_LIBRARIES}
+		              ${CRYPTO_LIBRARIES}
                       ${GNUTLS_LIBRARIES}
                       ${OPENSSL_LIBRARIES}
+                      ${FFMPEG_LIBRARIES}
 )
 
 SET_TARGET_PROPERTIES(vncclient vncserver
@@ -589,7 +604,6 @@ if(GTK2_FOUND)
     gtkvncviewer
   )
 endif(GTK2_FOUND)
-
 
 if(FFMPEG_FOUND)
   set(LIBVNCCLIENT_EXAMPLES

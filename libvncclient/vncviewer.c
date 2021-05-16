@@ -423,6 +423,10 @@ static rfbBool rfbInitConnection(rfbClient* client)
 rfbBool rfbInitClient(rfbClient* client,int* argc,char** argv) {
   int i,j;
 
+  #ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+    client->HandleH265 = &InitializeH265;
+  #endif
+
   if(argv && argc && *argc) {
     if(client->programName==0)
       client->programName=argv[0];
@@ -518,6 +522,10 @@ void rfbClientCleanup(rfbClient* client) {
 	client->decompStream.msg != NULL)
       rfbClientLog("inflateEnd: %s\n", client->decompStream.msg );
   }
+#endif
+
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+  CleanH265(client);
 #endif
 
   if (client->ultra_buffer)

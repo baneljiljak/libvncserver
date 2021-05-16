@@ -43,6 +43,11 @@ extern "C"
 #include <string.h>
 #include <rfb/rfbproto.h>
 
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+#include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
+#endif
+
 #if defined(ANDROID) || defined(LIBVNCSERVER_HAVE_ANDROID)
 #include <arpa/inet.h>
 #include <sys/select.h>
@@ -669,6 +674,16 @@ typedef struct _rfbClientRec {
     int turboQualityLevel;  /* 1-100 scale */
 #endif
 #endif
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+    const AVCodec *codec;
+    AVCodecContext *enc_ctx;
+    AVFrame *frame;
+    AVPacket *pkt;
+    struct SwsContext *sws_ctx;
+
+    rfbBool (*rfbSendRectEncodingH265)(struct _rfbClientRec*, int, int, int, int);
+#endif
+
     rfbSslCtx *sslctx;
     wsCtx     *wsctx;
     char *wspath;                          /* Requests path component */
@@ -895,6 +910,12 @@ extern rfbBool rfbSendRectEncodingTightPng(rfbClientPtr cl, int x,int y,int w,in
 #endif
 #endif
 
+/* h265.c */
+
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+extern rfbBool rfbInitializeH265(rfbClientPtr cl, int x, int y, int w, int h);
+extern void rfbCleanH265(rfbClientPtr cl);
+#endif
 
 /* cursor.c */
 

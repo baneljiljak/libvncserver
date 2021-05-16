@@ -181,7 +181,6 @@ static rfbBool HandleZRLE24Up(rfbClient* client, int rx, int ry, int rw, int rh)
 static rfbBool HandleZRLE24Down(rfbClient* client, int rx, int ry, int rw, int rh);
 static rfbBool HandleZRLE32(rfbClient* client, int rx, int ry, int rw, int rh);
 #endif
-
 /*
  * Server Capability Functions
  */
@@ -1244,6 +1243,10 @@ SetFormatAndEncodings(rfbClient* client)
 	encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingCoRRE);
       } else if (strncasecmp(encStr,"rre",encStrLen) == 0) {
 	encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingRRE);
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+      } else if (strncasecmp(encStr,"h265",encStrLen) == 0 || strncasecmp(encStr,"hevc",encStrLen) == 0) {
+    encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingH265);
+#endif
       } else {
 	rfbClientLog("Unknown encoding '%.*s'\n",encStrLen,encStr);
       }
@@ -2100,7 +2103,12 @@ HandleRFBServerMessage(rfbClient* client)
      }
 
 #endif
-
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+    case rfbEncodingH265:
+      if (!client->HandleH265(client, rect.r.x,rect.r.y,rect.r.w,rect.r.h))
+	      return FALSE;
+      break;
+#endif
       case rfbEncodingQemuExtendedKeyEvent:
         SetClient2Server(client, rfbQemuEvent);
         break;

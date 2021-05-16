@@ -99,6 +99,11 @@ extern "C"
 {
 #endif
 
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+#include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
+#endif
+
 /** vncrec */
 
 typedef struct {
@@ -238,6 +243,11 @@ typedef char* (*GetUserProc)(struct _rfbClient* client);
 typedef char* (*GetSASLMechanismProc)(struct _rfbClient* client, char* mechlist);
 #endif /* LIBVNCSERVER_HAVE_SASL */
 
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+extern rfbBool InitializeH265 (struct _rfbClient* client, int rx, int ry, int rw, int rh);
+extern void CleanH265 (struct _rfbClient* client);
+#endif
+
 typedef struct _rfbClient {
 	uint8_t* frameBuffer;
 	int width, height;
@@ -328,7 +338,17 @@ typedef struct _rfbClient {
 
 #endif
 #endif
+#ifdef LIBVNCSERVER_HAVE_LIBFFMPEG
+    const AVCodec *codec;
+    AVCodecParserContext *parser;
+    AVCodecContext *dec_ctx;
+    AVFrame *frame;
+    AVPacket *pkt;
+    struct SwsContext *sws_ctx;
+    uint8_t *buffer_H265;
 
+    rfbBool (*HandleH265)(struct _rfbClient*, int, int, int, int);
+#endif
 
 	/* cursor.c */
 	/** Holds cursor shape data when received from server. */
