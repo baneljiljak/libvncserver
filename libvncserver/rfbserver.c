@@ -1044,7 +1044,7 @@ rfbSendSupportedEncodings(rfbClientPtr cl)
 	rfbEncodingSupportedEncodings,
 	rfbEncodingServerIdentity,
 #ifdef LIBVNCSERVER_HAVE_FFMPEG
-    rfbEncodingsH265
+    rfbEncodingH265
 #endif
     };
     uint32_t nEncodings = sizeof(supported) / sizeof(supported[0]), i;
