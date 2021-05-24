@@ -558,6 +558,13 @@ set(LIBVNCSERVER_EXAMPLES
     vncev
   )
 
+if(FFMPEG_FOUND)
+set(LIBVNCSERVER_EXAMPLES
+    ${LIBVNCSERVER_EXAMPLES}
+    video
+  )
+endif(FFMPEG_FOUND)
+
 if(WITH_THREADS AND (CMAKE_USE_PTHREADS_INIT OR CMAKE_USE_WIN32_THREADS_INIT))
   set(LIBVNCSERVER_EXAMPLES
     ${LIBVNCSERVER_EXAMPLES}
@@ -622,7 +629,7 @@ foreach(e ${LIBVNCSERVER_EXAMPLES})
   add_executable(examples_${e} ${LIBVNCSRVEXAMPLE_DIR}/${e}.c)
   set_target_properties(examples_${e} PROPERTIES OUTPUT_NAME ${e})
   set_target_properties(examples_${e} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/examples)
-  target_link_libraries(examples_${e} vncserver ${CMAKE_THREAD_LIBS_INIT} ${CARBON_LIBRARY} ${IOKIT_LIBRARY} ${IOSURFACE_LIBRARY})
+  target_link_libraries(examples_${e} vncserver ${CMAKE_THREAD_LIBS_INIT} ${CARBON_LIBRARY} ${IOKIT_LIBRARY} ${IOSURFACE_LIBRARY} ${FFMPEG_LIBRARIES})
 endforeach(e ${LIBVNCSERVER_EXAMPLES})
 
 foreach(e ${LIBVNCCLIENT_EXAMPLES})
